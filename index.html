@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drowsy Alert Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; }
+        .status-card { padding: 20px; margin: 20px; border-radius: 15px; font-size: 2em; }
+        .safe { background: #2ecc71; }
+        .danger { background: #e74c3c; animation: blink 1s infinite; }
+        img { max-width: 90%; border: 5px solid #fff; border-radius: 10px; margin-top: 20px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <h1>Driver Monitoring System</h1>
+    <div id="statusBox" class="status-card safe">LOADING...</div>
+    <p>Last Update: <span id="time">--</span></p>
+    <div id="photoArea">
+        <h3>Last Danger Event Photo:</h3>
+        <img id="alertImg" src="" style="display:none;">
+    </div>
+
+    <script>
+        // PASTE YOUR FIREBASE CONFIG FROM PROJECT SETTINGS HERE
+        const firebaseConfig = {
+            databaseURL: "https://drowsydriver-eff03-default-rtdb.firebaseio.com/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('driver_status');
+
+        dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            const box = document.getElementById('statusBox');
+            box.innerText = data.status;
+            box.className = 'status-card ' + (data.status === 'DANGER' ? 'danger' : 'safe');
+            document.getElementById('time').innerText = data.timestamp;
+            
+            if(data.last_alert_image) {
+                const img = document.getElementById('alertImg');
+                img.src = data.last_alert_image;
+                img.style.display = 'inline-block';
+            }
+        });
+    </script>
+</body>
+</html>
