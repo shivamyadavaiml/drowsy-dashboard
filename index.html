@@ -1,74 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Drowsy Alert Dashboard</title>
+    <title>Drowsy AI Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #121212; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* System Status Label */
-        .sys-label { font-size: 0.9rem; margin-bottom: 10px; display: block; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #121212; color: white; transition: 0.5s; }
+        .container { max-width: 1000px; margin: auto; padding: 20px; }
+        .sys-info { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
         .online { color: #2ecc71; font-weight: bold; }
         .offline { color: #e74c3c; font-weight: bold; }
 
-        .cloud-links { margin: 20px 0; padding: 15px; background: #252525; border-radius: 10px; display: flex; justify-content: center; gap: 20px; }
-        .cloud-links a { text-decoration: none; font-weight: bold; padding: 10px 15px; border-radius: 5px; transition: 0.3s; font-size: 0.8rem; }
-        .btn-firebase { border: 2px solid #ffa000; color: #ffa000; }
-        .btn-cloudinary { border: 2px solid #0078ff; color: #0078ff; }
-
-        .badge { padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 1.8rem; display: inline-block; margin: 10px 0; transition: 0.5s; }
-        .SAFE { background: #2ecc71; }
-        .DANGER { background: #e74c3c; box-shadow: 0 0 20px #ff0000; animation: pulse 1.5s infinite; }
+        .badge { padding: 20px 50px; border-radius: 50px; font-weight: bold; font-size: 2rem; display: inline-block; margin: 20px 0; border: 4px solid transparent; }
+        .SAFE { border-color: #2ecc71; color: #2ecc71; }
+        .DANGER { background: #e74c3c; color: white; box-shadow: 0 0 30px #ff0000; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        .main-layout { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; justify-content: center; }
-        .snapshot-box { flex: 1; min-width: 300px; }
-        .history-box { flex: 1; min-width: 300px; background: #252525; padding: 15px; border-radius: 10px; max-height: 450px; overflow-y: auto; }
+        .layout { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 30px; }
+        .box { flex: 1; background: #1e1e1e; padding: 20px; border-radius: 15px; min-width: 300px; }
+        img { width: 100%; border-radius: 10px; border: 2px solid #333; }
 
-        img { width: 100%; border-radius: 8px; border: 3px solid #333; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { background: #333; position: sticky; top: 0; padding: 10px; }
-        td { padding: 8px; border-bottom: 1px solid #333; }
-        .row-link { color: #0078ff; text-decoration: none; }
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 0.9rem; }
+        th { border-bottom: 2px solid #333; padding: 10px; color: #888; }
+        td { padding: 10px; border-bottom: 1px solid #222; }
+        .img-link { color: #0078ff; text-decoration: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Driver Monitoring Dashboard</h1>
-    
-    <span class="sys-label">System Hardware: <span id="sys-status" class="offline">OFFLINE</span></span>
+    <h1>Smart Driver Monitoring</h1>
+    <div class="sys-info">Hardware Status: <span id="sys-stat" class="offline">CHECKING...</span></div>
 
-    <div class="cloud-links">
-        <a href="https://console.firebase.google.com/u/0/project/drowsydriver-eff03/database/drowsydriver-eff03-default-rtdb/data" target="_blank" class="btn-firebase">FIREBASE DATA</a>
-        <a href="https://console.cloudinary.com/console/media_library/folders/search?q=drowsy_alerts" target="_blank" class="btn-cloudinary">CLOUDINARY IMAGES</a>
-    </div>
+    <div id="status-badge" class="badge SAFE">CONNECTING...</div>
 
-    <div id="status" class="badge SAFE">CONNECTING...</div>
-
-    <div class="main-layout">
-        <div class="snapshot-box">
-            <h3>Latest Alert Snapshot</h3>
-            <img id="alertImg" src="https://via.placeholder.com/400x300?text=Waiting+for+Data" alt="Driver Photo">
-            <p class="info">Last Update: <span id="ts" style="color: #fff;">--</span></p>
+    <div class="layout">
+        <div class="box">
+            <h3>Latest Danger Capture</h3>
+            <img id="latest-img" src="https://via.placeholder.com/400x300?text=No+Alerts+Yet">
+            <p id="alert-time" style="color:#888; margin-top:10px;">--</p>
         </div>
 
-        <div class="history-box">
+        <div class="box" style="max-height: 500px; overflow-y: auto;">
             <h3>Alert History Log</h3>
             <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>EAR</th>
-                        <th>View</th>
-                    </tr>
-                </thead>
-                <tbody id="history-body">
-                    </tbody>
+                <thead><tr><th>Time</th><th>EAR</th><th>Link</th></tr></thead>
+                <tbody id="history-rows"></tbody>
             </table>
         </div>
     </div>
@@ -79,51 +56,44 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Listen for Main Driver Status
-    db.ref('driver_status').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            // Update UI Status
-            const statusEl = document.getElementById('status');
-            statusEl.innerText = data.status || "UNKNOWN";
-            statusEl.className = 'badge ' + (data.status === "DANGER" ? "DANGER" : "SAFE");
-            document.getElementById('ts').innerText = data.timestamp || "N/A";
-            if (data.last_alert_image) document.getElementById('alertImg').src = data.last_alert_image;
+    // 1. LIVE STATUS MONITOR
+    db.ref('driver_status').on('value', (snap) => {
+        const val = snap.val();
+        if (!val) return;
 
-            // Update System Online/Offline Status
-            const sysStatus = document.getElementById('sys-status');
-            const lastPing = data.last_ping || 0;
-            const now = Date.now() / 1000;
-            if (now - lastPing < 15) {
-                sysStatus.innerText = "ONLINE";
-                sysStatus.className = "online";
-            } else {
-                sysStatus.innerText = "OFFLINE";
-                sysStatus.className = "offline";
-            }
+        // UI Update
+        const badge = document.getElementById('status-badge');
+        badge.innerText = val.status || "SAFE";
+        badge.className = "badge " + (val.status === "DANGER" ? "DANGER" : "SAFE");
+
+        // Hardware Ping Check
+        const sys = document.getElementById('sys-stat');
+        const isOnline = (Date.now() / 1000) - val.last_ping < 15;
+        sys.innerText = isOnline ? "ONLINE" : "OFFLINE";
+        sys.className = isOnline ? "online" : "offline";
+
+        // Update Image only if it's a real alert
+        if (val.status === "DANGER" && val.last_alert_image) {
+            document.getElementById('latest-img').src = val.last_alert_image;
+            document.getElementById('alert-time').innerText = val.timestamp;
         }
     });
 
-    // 2. Listen for History Table Data
-    db.ref('alerts_history').limitToLast(15).on('value', (snapshot) => {
-        const historyBody = document.getElementById('history-body');
-        historyBody.innerHTML = ""; // Clear current table
-        
-        const alerts = [];
-        snapshot.forEach((child) => {
-            alerts.unshift(child.val()); // Add new alerts to the top
+    // 2. HISTORY TABLE MONITOR
+    db.ref('alerts_history').limitToLast(10).on('value', (snap) => {
+        const container = document.getElementById('history-rows');
+        container.innerHTML = "";
+        let rows = [];
+        snap.forEach(child => {
+            const a = child.val();
+            rows.unshift(`<tr>
+                <td>${a.timestamp.split(' ')[3]}</td>
+                <td>${a.ear}</td>
+                <td><a href="${a.image_url}" target="_blank" class="img-link">View</a></td>
+            </tr>`);
         });
-
-        alerts.forEach(alert => {
-            const row = `<tr>
-                <td>${alert.timestamp.split(' ')[3]}</td> 
-                <td>${alert.ear_metric || 'N/A'}</td>
-                <td><a class="row-link" href="${alert.image_url}" target="_blank">Image</a></td>
-            </tr>`;
-            historyBody.innerHTML += row;
-        });
+        container.innerHTML = rows.join('');
     });
 </script>
-
 </body>
 </html>
